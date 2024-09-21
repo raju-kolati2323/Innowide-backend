@@ -44,9 +44,10 @@ app.use(function(err, req, res, next) {
 
 const port=4000
 app.listen(port,()=>{
-  console.log('Server is running at port http://localhost:'+port);
+  console.log('Server is running at port'+port);
 })
-mongoose.connect('mongodb://localhost:27017/Innowide')
+const uri="mongodb+srv://satyainnowide:innowideserver@innowide.lkdx2.mongodb.net/?retryWrites=true&w=majority&appName=Innowide"
+mongoose.connect(uri)
 .then(()=>console.log('Connect to MongoDB'))
 .catch((err)=>console.log('Error connecting to MongoDB', err));
 
