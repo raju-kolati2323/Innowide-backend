@@ -21,12 +21,13 @@ var transporter = nodemailer.createTransport({
 
 
 // Function to send email
-function sendMail(fromEmail, subject, text) {
+function sendMail(fromEmail, subject, htmlContent) {
   var mailOptions = {
-    from: fromEmail, // Sender's email address from req.body
+    from: `${fromEmail}`, // Sender's email address from req.body
     to: process.env.EMAIL_ID, // Your email to receive form data
     subject: subject,        // Subject of the email
-    text: text               // Text message content
+    html: htmlContent,               // Text message content
+    replyTo: fromEmail 
   };
 
   return transporter.sendMail(mailOptions);
@@ -41,14 +42,17 @@ router.post('/contact-us', (req, res) => {
       // Send email with form data
       const emailSubject = `New Contact Us Submission: ${req.body.subject}`;
       const emailText = `
-        You have a new contact-form submission:
-        \nFull Name: ${req.body.fullName}
-        \nEmail: ${req.body.email}
-        \nMessage: ${req.body.message}
+        <div style="border: 1px solid #ccc; border-radius: 5px; padding: 20px; max-width: 600px; font-family: Arial, sans-serif;">
+          <h2 style="color: #333;">New Contact Us Submission</h2>
+          <p><strong>Full Name:</strong> ${req.body.fullName}</p>
+          <p><strong>Email:</strong> ${req.body.email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${req.body.message}</p>
+        </div>
       `;
 
       sendMail(req.body.email, emailSubject, emailText)
-        .then(() => res.status(200).send('Contact form submitted and email sent successfully!'))
+        .then(() => res.status(200).send('Contact form submitted successfully!'))
         .catch((err) => res.status(500).send('Contact form saved but error sending email:', err.message));
     })
     .catch((err) => res.status(404).send('Error submitting form:', err.message));
@@ -56,6 +60,15 @@ router.post('/contact-us', (req, res) => {
 
 // Get In Touch form submission
 router.post('/get-in-touch', (req, res) => {
+  const { fullName, email, phoneNumber, message } = req.body;
+
+  // Validate phone number
+  const phoneRegex = /^[6-9]\d{9}$/; // Validates that phone number is 10 digits and starts with 6-9
+
+  if (!phoneRegex.test(phoneNumber)) {
+    return res.status(400).send('Invalid phone number. It must be 10 digits long and start with 6, 7, 8, or 9.');
+  }
+
   var touch = new getInTouch(req.body);
 
   touch.save()
@@ -63,18 +76,22 @@ router.post('/get-in-touch', (req, res) => {
       // Send email with form data
       const emailSubject = `New Get in Touch Submission`;
       const emailText = `
-        You have a new Get in Touch submission:
-        \nFull Name: ${req.body.fullName}
-        \nEmail: ${req.body.email}
-        \nPhone Number: ${req.body.phoneNumber}
-        \nMessage: ${req.body.message}
+        <div style="border: 1px solid #ccc; border-radius: 5px; padding: 20px; max-width: 600px; font-family: Arial, sans-serif;">
+          <h2 style="color: #333;">New Get in Touch Submission</h2>
+          <p><strong>Full Name:</strong> ${fullName}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone Number:</strong> ${phoneNumber}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        </div>
       `;
 
-      sendMail(req.body.email, emailSubject, emailText)
-        .then(() => res.status(200).send('Form submitted and email sent successfully!'))
+      sendMail(email, emailSubject, emailText)
+        .then(() => res.status(200).send('Form submitted successfully!'))
         .catch((err) => res.status(500).send('Form saved but error sending email:', err.message));
     })
     .catch((err) => res.status(404).send('Error submitting form:', err.message));
 });
+
 
 module.exports = router;
